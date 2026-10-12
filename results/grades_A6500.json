@@ -1,0 +1,15 @@
+{
+  "run": "suite A at 6500 max tokens — VibeThinker-3B, 64K f16 (native 128K), fresh server per test",
+  "graded": "2026-10-11 evening",
+  "sampling": {"temperature": 0.3, "top_p": 0.95, "top_k": 40, "min_p": 0.0},
+  "grades": {
+    "a_code": {"score": 8, "note": "Complete correct merge_sort with type hints, docstring, empty/single-element edge cases, full example usage (empty + single-element demos included), plus a clean summary. Correct and well-formed; meta-planning preamble ('We need to...') before the code costs presentation, not correctness."},
+    "a_iambic": {"score": 2, "note": "6500 tokens burned ENTIRELY on syllable-counting meta-reasoning; a real 8-line poem never arrives. It drafts candidate lines ('Frost creeps, and the deep night calls all to run') and re-counts syllables forever, looping mid-count at the cap. No poem = automatic 1-2."},
+    "a_prose": {"score": 7, "note": "5,877 tokens: complete coverage of all 4 required elements (autoimmune mechanism, anti-TPO role, euthyroid→subclinical→clinical progression, per-stage lab findings TSH/T4/T3) with 12-section structure and a closing summary. Meta-planning header + restatement preamble inflate length; content itself accurate and thorough."},
+    "a_creative": {"score": 6, "note": "Complete scene (~200-300 words actual prose embedded in 4,024 tokens), old-woman keeper persona held, strong sensory detail, clean ending ('a light that never truly went out'). Meta preamble ('The user asks...') and restatement before the scene cost it; the scene itself is good."},
+    "a_math": {"score": 9, "note": "Opens with the required 'Theorem: sqrt(2) is irrational', full proof by contradiction with parity chain, ends in \\boxed{...}. Meta preamble precedes the theorem but every requested element is present and correct."}
+  },
+  "averages": {"suite_A_6500": 6.4},
+  "finding": "Budget artifact confirmed again but with a twist: 6500 tokens complete 4/5 suite-A prompts for VibeThinker (prose needed 5,877; creative 4,024; math 2,870; code 1,633 — all clean stops). The exception is a_iambic: unlike Qwen/LFM (which emit the poem but violate meter), VibeThinker never commits to verse at any budget — it plans, drafts, and re-counts syllables until the cap. Strict-form poetry is a hard loop for this model, worse than a truncation issue.",
+  "style_note": "Every response opens with meta-planning prose ('We need to...') and often restates the user's prompt before the deliverable. No template thinking-switch exists; the reasoning IS the content. Grades credit the deliverable, penalize the burn."
+}

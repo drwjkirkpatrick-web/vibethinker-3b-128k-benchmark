@@ -1,5 +1,5 @@
 {
-  "run": "suite D retest at 3072 max tokens (3x) — VibeThinker-3B 64K f16",
+  "run": "suite D retest at 3072 max tokens (3x) — VibeThinker-3B native 128K, tested at 64K f16",
   "graded": "2026-10-11",
   "files": {"cap1024": "bench_vibe_20261011.jsonl (12 D rows)", "cap3072": "bench_vibe_20261011_D3072.jsonl (12 D rows)"},
   "result": {

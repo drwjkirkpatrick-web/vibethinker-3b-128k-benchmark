@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-vibe_bench.py — VibeThinker-3B (Q4_K_M, qwen2 arch) @ 64K f16 KV, one prompt
-per fresh server. Native ctx 131072 (128K) — NO YaRN needed at 64K. No MTP/DSpark
+vibe_bench.py — VibeThinker-3B (Q4_K_M, qwen2 arch) @ 128K-class f16 KV (tested at 64K), one prompt
+per fresh server. Native ctx 131072 (128K) — NO YaRN — native ctx covers 64K. No MTP/DSpark
 drafter exists for this model. Chat template: ChatML with native tool calls,
 no thinking switch (verified from GGUF) — no chat_template_kwargs passed.
 
@@ -40,7 +40,7 @@ PORT = 8090
 BASE = f"http://127.0.0.1:{PORT}"
 CTX = 65536
 
-# No drafter (no MTP for VibeThinker), no rope scaling (native 128K >= 64K),
+# No drafter (no MTP for VibeThinker), no rope scaling (native 128K covers 64K with 2x headroom),
 # f16 KV cache (no -ctk/-ctv flags).
 LAUNCH_ARGS = [
     SERVER, "-m", MODEL,
@@ -232,7 +232,7 @@ def run_ids(targets, spec, max_tokens_override=None):
     out_f = open(RESULTS, "a")
     for p in targets:
         pid_ = p["id"]
-        log_path = f"/tmp/vibe64k_{pid_}.log"
+        log_path = f"/tmp/vibe128k_{pid_}.log"
         mt = max_tokens_override or p["max_tokens"]
         print(f"\n=== {pid_} ({p['label']}) [max {mt}] ===", flush=True)
         kill_server()

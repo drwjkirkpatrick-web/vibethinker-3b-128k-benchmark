@@ -24,15 +24,19 @@ Canonical spec: `~/projects/lfm25-3b-64k-benchmark/prompts_abcd.json` (v3).
 1. `vibe_bench.py` launches every llama-server with `start_new_session` (setsid)
    and kills via bracket patterns (`[l]lama-server`) — a killed runner never
    orphans a server, and kill_server never matches its own wrapper cmdline.
-2. **Long batches** (any test that can exceed the ~420 s foreground window —
-   6K+ tokens at this model's 20 tok/s): run the sequential runner via the
-   terminal tool with `background=true, notify=true`:
-   `python3 run_batch.py --max-tokens 24000 --results results/bench_vibe_20261011_B24k.jsonl --ids b_html,...`
-   Tracked, timeout-proof, survives context switches; JSONL resume skips done ids.
-3. **NEVER** shell-level `setsid nohup ... & disown` wrappers — refused by the
-   terminal tool, and they bypass process tracking entirely.
-4. Foreground calls only for batches that fit the window (~<5 min total).
-5. Keepalive cron stays PAUSED during campaigns (comment the line); restore
+2. **NEVER run a model-loading batch via terminal `background=true`.** The
+   wrapper moves it into `hermes-worker-*.scope`, a memory-cgroup-limited
+   scope: llama-server's big load gets memcg-OOM-killed at ~4.3 GB RSS every
+   time (journal-verified 2026-10-11 night; two full B24k batches lost to it).
+3. **Long batches run DETACHED, launched from a normal foreground call:**
+   `python3 -c "import subprocess, sys; log=open('/tmp/<name>.log','w'); p=subprocess.Popen([sys.executable,'run_batch.py', ...], stdout=log, stderr=subprocess.STDOUT, start_new_session=True); print(p.pid)"`
+   Detached into the roomy user slice; no shell wrapper syntax (setsid/nohup/
+   disown are refused by the tool); progress via `tail` of the log + row count
+   of the JSONL; resume-safe JSONL skips done ids on any relaunch.
+4. **Runner lock:** `/tmp/vibe_bench.lock` (O_EXCL, stale-lock steal) prevents
+   two runners racing on port 8090 — a race loses every launch.
+5. Foreground calls only for batches that fit the ~5-min window.
+6. Keepalive cron stays PAUSED during campaigns (comment the line); restore
    after: uncomment, `~/bin/llm-64k start`, curl `/health`.
 
 ## Results state

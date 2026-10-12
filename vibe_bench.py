@@ -235,15 +235,58 @@ def run_ids(targets, spec, max_tokens_override=None):
         log_path = f"/tmp/vibe128k_{pid_}.log"
         mt = max_tokens_override or p["max_tokens"]
         print(f"\n=== {pid_} ({p['label']}) [max {mt}] ===", flush=True)
-        kill_server()
-        proc, load_s, log_path = launch_server(log_path)
-        if proc is None:
-            tail = log_tail(log_path)
-            rec = {"id": pid_, "error": f"SERVER LOAD FAILED after {load_s}s", "log_tail": tail}
-            out_f.write(json.dumps(rec) + "\n"); out_f.flush()
-            print(f"  LOAD FAILED after {load_s}s\n  {tail}")
+        # Port arbitration: refuse to start if another runner holds 8090.
+        # (Root cause of the 2026-10-11 B24k collision: a still-live 4000-cap
+        # runner's kill/launch cycle raced this batch; every launch lost.)
+        arb = "/tmp/vibe_bench.lock"
+        # Steal a stale lock (holder process no longer exists, e.g. after a SIGKILL)
+        if os.path.exists(arb):
+            try:
+                holder = int(open(arb).read().strip() or "0")
+            except (OSError, ValueError):
+                holder = 0
+            try:
+                os.kill(holder, 0)
+                holder_alive = True
+            except OSError:
+                holder_alive = False
+            if not holder_alive:
+                print("  NOTE: removing stale runner lock", flush=True)
+                try:
+                    os.unlink(arb)
+                except OSError:
+                    pass
+        try:
+            fd = os.open(arb, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+        except FileExistsError:
+            print(f"  ABORT: another vibe_bench runner is active ({arb}) — "
+                  f"wait for it to exit before launching a second batch.")
+            out_f.close()
+            raise SystemExit(2)
+        try:
+            kill_server()
+            proc, load_s, _ = launch_server(log_path)
+            if proc is None:
+                tail = log_tail(log_path)
+                rec = {"id": pid_, "error": f"SERVER LOAD FAILED after {load_s}s", "log_tail": tail}
+                out_f.write(json.dumps(rec) + "\n"); out_f.flush()
+                print(f"  LOAD FAILED after {load_s}s\n  {tail}")
+                continue
+            facts = server_facts(proc, log_path)
+        except SystemExit:
+            raise
+        except BaseException:
+            import traceback
+            traceback.print_exc()
             continue
-        facts = server_facts(proc, log_path)
+        finally:
+            # Release the runner lock on every path (continue, error, crash)
+            try:
+                os.unlink(arb)
+            except OSError:
+                pass
         print(f"  loaded in {load_s}s  RSS {facts['rss_gb']} GB  KV {facts['kv_line']}  "
               f"free {facts['free_after_load_mb']} MB", flush=True)
         tools = [TOOL_SCHEMAS[p["tool"]]] if p.get("tool") in TOOL_SCHEMAS else None

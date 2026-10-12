@@ -1,0 +1,15 @@
+{
+  "run": "suite D retest at 3072 max tokens (3x) — VibeThinker-3B 64K f16",
+  "graded": "2026-10-11",
+  "files": {"cap1024": "bench_vibe_20261011.jsonl (12 D rows)", "cap3072": "bench_vibe_20261011_D3072.jsonl (12 D rows)"},
+  "result": {
+    "truncated_1024": "6/12 (sqrt2, switches, boxes, binsearch, fib, piano)",
+    "truncated_3072": "3/12 (switches, boxes, piano hit even 3072 — reasoning loops on open-ended deduction/estimation)",
+    "completed_by_3072": "sqrt2 (+923 tok), binsearch (+1130), fib (+639) — completed cleanly with full reasoning",
+    "traps_3072": "PASS 5/5 (strawberry 3, elephant 2, sheep 9, bat&ball $0.05, sum 5050)",
+    "tokens": "8431 -> 17819 total",
+    "speed": "flat ~20.3 tok/s at both caps (no drafter, no draft acceptance variance)",
+    "memory": "RSS avg 4.72 GB, loads ~8s, no YaRN (native 128K)"
+  },
+  "finding": "VibeThinker thinks out loud in visible content (no template thinking switch). Short-answer traps complete early and correctly at any cap. Proof/explanation prompts need 1-1.6K tokens to finish reasoning; the two open-ended deduction/estimation prompts (switches, piano) loop past 3072 — same prompt classes Qwen3.5-2B failed, but VibeThinker burns triple the tokens trying. Verbal-reasoning style makes 1024 caps truncate mid-thought; 3072 rescues 3 of 6."
+}

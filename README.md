@@ -1,5 +1,7 @@
 # VibeThinker-3B 128K benchmark — runbook & settings
 
+**Tags:** `llm` `benchmark` `llama.cpp` `Jetson` `long-context` `edge-ai` `vibethinker` `cap-profile-v3`
+
 **Model:** VibeThinker-3B Q4_K_M (1.93 GB, qwen2 arch) — native ctx **131072 (128K)**,
 NO YaRN needed at 64K. No MTP/DSpark drafter exists for it. ChatML template with
 native tool calls, **no template thinking-switch** — its reasoning is emitted as
